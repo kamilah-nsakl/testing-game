@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuis Informatika - CSV Version</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #f0f8ff; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: white; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); padding: 20px; }
+        .header { text-align: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #3498db; }
+        .section { display: none; margin-bottom: 20px; }
+        .section.active { display: block; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type="text"] { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        .soal { background: #f9f9f9; padding: 15px; border-radius: 5px; margin-bottom: 15px; border-left: 4px solid #3498db; }
+        .pilihan { margin: 8px 0; }
+        .pilihan label { display: flex; align-items: center; font-weight: normal; cursor: pointer; }
+        .pilihan input { margin-right: 8px; }
+        textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; min-height: 80px; resize: vertical; }
+        .btn { background: #3498db; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; margin: 5px; }
+        .btn:hover { background: #2980b9; }
+        .btn-success { background: #27ae60; }
+        .btn-warning { background: #f39c12; }
+        .navigation { display: flex; justify-content: space-between; margin-top: 20px; }
+        .hasil { text-align: center; }
+        .nilai { font-size: 36px; font-weight: bold; color: #27ae60; margin: 15px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Kuis Informatika SMPIT AL-AMIN DEPOK</h1>
+            <p>Tahun Pelajaran 2025/2026</p>
+        </div>
+
+        <!-- Section Identitas -->
+        <div id="identitas" class="section active">
+            <h2>Data Diri</h2>
+            <div class="form-group">
+                <label for="nama">Nama Lengkap:</label>
+                <input type="text" id="nama">
+            </div>
+            <div class="form-group">
+                <label for="kelas">Kelas:</label>
+                <input type="text" id="kelas">
+            </div>
+            <div class="form-group">
+                <label for="tanggal">Tanggal:</label>
+                <input type="text" id="tanggal">
+            </div>
+            <button class="btn btn-success" onclick="loadSoal()">Mulai Kuis</button>
+        </div>
+
+        <!-- Section Pilihan Ganda -->
+        <div id="pilihan-ganda" class="section">
+            <div id="soal-pg-container"></div>
+            <div class="navigation">
+                <button class="btn" onclick="prevSoalPG()">Sebelumnya</button>
+                <span id="counter-pg">Soal 1/10</span>
+                <button class="btn" onclick="nextSoalPG()">Selanjutnya</button>
+                <button class="btn btn-warning" onclick="selesaiPG()">Selesai PG</button>
+            </div>
+        </div>
+
+        <!-- Section Essay -->
+        <div id="essay" class="section">
+            <div id="soal-essay-container"></div>
+            <div class="navigation">
+                <button class="btn" onclick="prevSoalEssay()">Sebelumnya</button>
+                <span id="counter-essay">Soal 1/10</span>
+                <button class="btn" onclick="nextSoalEssay()">Selanjutnya</button>
+                <button class="btn btn-success" onclick="selesaiKuis()">Selesai Kuis</button>
+            </div>
+        </div>
+
+        <!-- Section Hasil -->
+        <div id="hasil" class="section">
+            <div class="hasil">
+                <h2>HASIL KUIS</h2>
+                <div id="identitas-hasil"></div>
+                <div class="nilai" id="nilai-total">0</div>
+                <button class="btn" onclick="downloadHasil()">Download Hasil CSV</button>
+                <button class="btn btn-warning" onclick="ulangiKuis()">Ulangi Kuis</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data dari CSV (dalam aplikasi nyata, ini akan di-load dari file CSV)
+        const soalPG = [
+            { nomor: 1, soal: "Berikut ini yang bukan keuntungan belajar menggunakan digital learning adalah ...", pilihan_a: "Pembelajaran", pilihan_b: "Belajar dapat dilakukan kapanpun", pilihan_c: "Lebih interaktif", pilihan_d: "Mengasah kemampuan berpikir", jawaban_benar: "a" },
+            { nomor: 2, soal: "Jenis pendekatan yang dapat dilakukan dalam proses belajar dengan tujuan bisa mencapai sesuatu yang ingin diraih adalah ...", pilihan_a: "Compatible value system", pilihan_b: "File header dan library", pilihan_c: "Computational thinking", pilihan_d: "Function dan procedure name", jawaban_benar: "c" },
+            { nomor: 3, soal: "Data yang membuat audio dan visual mengenai suatu hal adalah ...", pilihan_a: "Video", pilihan_b: "Teks", pilihan_c: "Gambar", pilihan_d: "Bilangan", jawaban_benar: "a" },
+            { nomor: 4, soal: "Guna menghapus folder sanggup dilakukan dengan cara pilih folder yang akan dihapus, lalu klik file dari sajian dan pilih...", pilihan_a: "Rename", pilihan_b: "Properties", pilihan_c: "New", pilihan_d: "Delete", jawaban_benar: "d" },
+            { nomor: 5, soal: "Progam yang biasa digunakan untuk pembuatan slide untuk presentasi agar terlihat mudah disebut ...", pilihan_a: "Ms. Access", pilihan_b: "Ms. Word", pilihan_c: "Ms. Excel", pilihan_d: "Ms. Powerpoint", jawaban_benar: "d" },
+            { nomor: 6, soal: "Berikut ini yang bukan merupakan bagian dari web browser adalah ...", pilihan_a: "Opera", pilihan_b: "Mozilla Firefox", pilihan_c: "Yahoo", pilihan_d: "Internet Explorer", jawaban_benar: "c" },
+            { nomor: 7, soal: "Suatu cara untuk mengirimkan pesan dalam format data elektronik dari satu komputer ke komputer lain disebut ...", pilihan_a: "Chatting", pilihan_b: "E-mail", pilihan_c: "Surfing", pilihan_d: "Browsing", jawaban_benar: "b" },
+            { nomor: 8, soal: "Ketika seseorang sudah terbiasa dengan computational thinking, dampaknya adalah ...", pilihan_a: "Menjadi generasi menunduk", pilihan_b: "Penggunaan teknologi total", pilihan_c: "Pola lebih berpikir kritis", pilihan_d: "Selalu menerima apa adanya", jawaban_benar: "c" },
+            { nomor: 9, soal: "Berpikir komputasional yaitu cara berpikir untuk ...", pilihan_a: "Menguraikan masalah", pilihan_b: "Mempersulit masalah", pilihan_c: "Mempergunakan berbagai macam akar", pilihan_d: "Mengetahui akar masalah", jawaban_benar: "a" },
+            { nomor: 10, soal: "Untuk mencari situs tertentu di internet, di dalam search engine dimasukkan ...", pilihan_a: "Keyword", pilihan_b: "Password", pilihan_c: "Keyboard", pilihan_d: "Username", jawaban_benar: "a" }
+        ];
+
+        const soalEssay = [
+            { nomor: 1, soal: "Sebutkan tiga contoh mesin pencari (search engine) yang sering digunakan!", jawaban_contoh: "Google, Bing, Yahoo" },
+            { nomor: 2, soal: "Sebutkan dua contoh perangkat input pada komputer!", jawaban_contoh: "Keyboard, Mouse" },
+            { nomor: 3, soal: "Sebutkan dan jelaskan 3 manfaat internet dalam kehidupan sehari-hari, khususnya bagi pelajar!", jawaban_contoh: "1. Sumber informasi untuk belajar\n2. Media komunikasi dengan guru dan teman\n3. Akses ke materi pembelajaran online" },
+            { nomor: 4, soal: "Apa perbedaan antara download dan upload?", jawaban_contoh: "Download adalah mengunduh data dari internet ke perangkat kita, sedangkan upload adalah mengirim data dari perangkat kita ke internet" },
+            { nomor: 5, soal: "Menurut pendapatmu, apa dampak positif dan negatif dari penggunaan media sosial bagi remaja? Jelaskan secara singkat!", jawaban_contoh: "Positif: Memperluas pertemanan, sumber informasi\nNegatif: Kecanduan, cyberbullying, privasi terancam" },
+            { nomor: 6, soal: "Apa yang dimaksud dengan data? dan mengapa data itu sangat penting digunakan?", jawaban_contoh: "Data adalah kumpulan fakta mentah yang belum diolah. Penting karena menjadi dasar pengambilan keputusan" },
+            { nomor: 7, soal: "Tuliskan yang kamu ketahui tentang cara membuka file!", jawaban_contoh: "1. Klik dua kali pada file\n2. Buka melalui program yang sesuai\n3. Drag and drop ke program" },
+            { nomor: 8, soal: "Menurutmu apa kekurangan e-mail dibandingkan dengan surat biasa?", jawaban_contoh: "Perlu koneksi internet, kurang personal, risiko keamanan data" },
+            { nomor: 9, soal: "Jelaskan fungsi dari speaker, proyektor dan printer!", jawaban_contoh: "Speaker: mengeluarkan suara\nProyektor: menampilkan gambar ke layar besar\nPrinter: mencetak dokumen ke kertas" },
+            { nomor: 10, soal: "Sebutkan situs web yang menyediakan fasilitas untuk mengirimkan free e-mail!", jawaban_contoh: "Gmail, Yahoo Mail, Outlook" }
+        ];
+
+        let jawabanPG = Array(soalPG.length).fill(null);
+        let jawabanEssay = Array(soalEssay.length).fill('');
+        let currentPGIndex = 0;
+        let currentEssayIndex = 0;
+
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(sectionId).classList.add('active');
+        }
+
+        function loadSoal() {
+            const nama = document.getElementById('nama').value;
+            const kelas = document.getElementById('kelas').value;
+            const tanggal = document.getElementById('tanggal').value;
+
+            if (!nama || !kelas || !tanggal) {
+                alert('Harap isi semua data identitas!');
+                return;
+            }
+
+            showSoalPG(0);
+            showSection('pilihan-ganda');
+        }
+
+        function showSoalPG(index) {
+            currentPGIndex = index;
+            const soal = soalPG[index];
+            
+            document.getElementById('counter-pg').textContent = `Soal ${index + 1}/${soalPG.length}`;
+
+            let html = `
+                <div class="soal">
+                    <h3>${soal.soal}</h3>
+                    <div class="pilihan">
+                        <label><input type="radio" name="pg" value="a" ${jawabanPG[index] === 'a' ? 'checked' : ''}> a) ${soal.pilihan_a}</label>
+                    </div>
+                    <div class="pilihan">
+                        <label><input type="radio" name="pg" value="b" ${jawabanPG[index] === 'b' ? 'checked' : ''}> b) ${soal.pilihan_b}</label>
+                    </div>
+                    <div class="pilihan">
+                        <label><input type="radio" name="pg" value="c" ${jawabanPG[index] === 'c' ? 'checked' : ''}> c) ${soal.pilihan_c}</label>
+                    </div>
+                    <div class="pilihan">
+                        <label><input type="radio" name="pg" value="d" ${jawabanPG[index] === 'd' ? 'checked' : ''}> d) ${soal.pilihan_d}</label>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('soal-pg-container').innerHTML = html;
+
+            // Add event listeners for radio buttons
+            document.querySelectorAll('input[name="pg"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    jawabanPG[index] = this.value;
+                });
+            });
+        }
+
+        function prevSoalPG() {
+            if (currentPGIndex > 0) {
+                showSoalPG(currentPGIndex - 1);
+            }
+        }
+
+        function nextSoalPG() {
+            if (currentPGIndex < soalPG.length - 1) {
+                showSoalPG(currentPGIndex + 1);
+            }
+        }
+
+        function selesaiPG() {
+            const unanswered = jawabanPG.filter(jawaban => jawaban === null).length;
+            if (unanswered > 0 && !confirm(`Masih ada ${unanswered} soal belum dijawab. Lanjut ke essay?`)) {
+                return;
+            }
+            showSoalEssay(0);
+            showSection('essay');
+        }
+
+        function showSoalEssay(index) {
+            currentEssayIndex = index;
+            const soal = soalEssay[index];
+            
+            document.getElementById('counter-essay').textContent = `Soal ${index + 1}/${soalEssay.length}`;
+
+            let html = `
+                <div class="soal">
+                    <h3>${soal.soal}</h3>
+                    <textarea oninput="jawabanEssay[${index}] = this.value">${jawabanEssay[index]}</textarea>
+                </div>
+            `;
+
+            document.getElementById('soal-essay-container').innerHTML = html;
+        }
+
+        function prevSoalEssay() {
+            if (currentEssayIndex > 0) {
+                showSoalEssay(currentEssayIndex - 1);
+            }
+        }
+
+        function nextSoalEssay() {
+            if (currentEssayIndex < soalEssay.length - 1) {
+                showSoalEssay(currentEssayIndex + 1);
+            }
+        }
+
+        function selesaiKuis() {
+            const unanswered = jawabanEssay.filter(jawaban => !jawaban.trim()).length;
+            if (unanswered > 0 && !confirm(`Masih ada ${unanswered} soal essay belum dijawab. Tetap selesaikan?`)) {
+                return;
+            }
+            calculateScore();
+            showSection('hasil');
+        }
+
+        function calculateScore() {
+            let scorePG = 0;
+            jawabanPG.forEach((jawaban, index) => {
+                if (jawaban === soalPG[index].jawaban_benar) {
+                    scorePG++;
+                }
+            });
+
+            const scoreEssay = soalEssay.length; // Asumsi semua essay benar
+
+            const totalScorePG = (scorePG / soalPG.length) * 70;
+            const totalScoreEssay = (scoreEssay / soalEssay.length) * 30;
+            const totalScore = totalScorePG + totalScoreEssay;
+
+            document.getElementById('identitas-hasil').innerHTML = `
+                <p><strong>Nama:</strong> ${document.getElementById('nama').value}</p>
+                <p><strong>Kelas:</strong> ${document.getElementById('kelas').value}</p>
+                <p><strong>Tanggal:</strong> ${document.getElementById('tanggal').value}</p>
+            `;
+            document.getElementById('nilai-total').textContent = totalScore.toFixed(2);
+
+            return totalScore;
+        }
+
+        function downloadHasil() {
+            const nama = document.getElementById('nama').value;
+            const kelas = document.getElementById('kelas').value;
+            const tanggal = document.getElementById('tanggal').value;
+            const nilai = calculateScore();
+            const waktu = new Date().toLocaleString();
+
+            const csvContent = `nama,kelas,tanggal,nilai_total,waktu_pengerjaan\n"${nama}","${kelas}","${tanggal}",${nilai.toFixed(2)},"${waktu}"`;
+            
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `hasil_kuis_${nama.replace(/\s+/g, '_')}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        function ulangiKuis() {
+            jawabanPG = Array(soalPG.length).fill(null);
+            jawabanEssay = Array(soalEssay.length).fill('');
+            document.getElementById('nama').value = '';
+            document.getElementById('kelas').value = '';
+            document.getElementById('tanggal').value = '';
+            showSection('identitas');
+        }
+
+        // Set tanggal otomatis
+        document.addEventListener('DOMContentLoaded', function() {
+            const now = new Date();
+            document.getElementById('tanggal').value = now.toLocaleDateString('id-ID');
+        });
+    </script>
+</body>
+</html>
